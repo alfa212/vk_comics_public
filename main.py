@@ -26,8 +26,9 @@ def fetch_comic_pic_title_ext(comic_number_to_publish, precessed_file_name):
     response = requests.get(processed_comic)
     response.raise_for_status()
 
-    processed_comic_link = response.json()["img"]
-    title = response.json()["alt"]
+    comic_img_title = response.json()
+    processed_comic_link = comic_img_title["img"]
+    title = comic_img_title["alt"]
 
     response = requests.get(processed_comic_link)
     response.raise_for_status()

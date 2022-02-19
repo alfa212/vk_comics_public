@@ -6,27 +6,7 @@ import requests
 from dotenv import load_dotenv
 
 
-def processing_published_comic(published_comics_file, comic_number_for_append=0, pic_to_delete=''):
-    published_comics_nums = []
-
-    if os.path.exists(published_comics_file):
-        with open(published_comics_file, 'r', encoding='utf-8') as file:
-            published_comics_nums = json.load(file)
-
-    if comic_number_for_append and pic_to_delete:
-        published_comics_nums.append(comic_number_for_append)
-
-        with open(published_comics_file, 'w') as file:
-            json.dump(published_comics_nums, file)
-
-        os.remove(pic_to_delete)
-
-        return
-
-    return published_comics_nums
-
-
-def get_random_comic_number(published_comics_nums):
+def get_random_comic_number():
     last_page_url = "https://xkcd.com/info.0.json"
 
     response = requests.get(last_page_url)
@@ -35,9 +15,7 @@ def get_random_comic_number(published_comics_nums):
     last_comic_num = response.json()["num"]
     all_comics_nums = [comic_num for comic_num in range(1, last_comic_num)]
 
-    unpublished_comics_nums = set(all_comics_nums) - set(published_comics_nums)
-
-    comic_number_to_publish = random.choice(list(unpublished_comics_nums))
+    comic_number_to_publish = random.choice(all_comics_nums)
 
     return comic_number_to_publish
 
@@ -99,8 +77,7 @@ if __name__ == '__main__':
     save_photo_to_album_method = 'photos.saveWallPhoto'
     post_vk_wall_method = 'wall.post'
 
-    published_comics_list = processing_published_comic(published_comics)
-    comic_random_number = get_random_comic_number(published_comics_list)
+    comic_random_number = get_random_comic_number()
     comic_info = fetch_comic_pic_title_ext(comic_random_number, processed_file_name)
     comic_title = comic_info[0]
     comic_pic_ext = comic_info[1]
@@ -155,4 +132,4 @@ if __name__ == '__main__':
         payload=payload_for_post_vk_wall
     )
 
-    processing_published_comic(published_comics, comic_random_number, processed_file)
+    os.remove(processed_file)

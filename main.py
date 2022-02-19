@@ -41,19 +41,20 @@ def fetch_comic_pic_title_ext(comic_number_to_publish, precessed_file_name):
     return title, pic_ext
 
 
-def fetch_upload_vk(method='', payload={}, url_for_upload='', pic_to_upload=''):
-    if url_for_upload and pic_to_upload:
-        with open(pic_to_upload, 'rb') as file:
-            url = url_for_upload
-            files = {
-                'photo': file,
-            }
+def upload_file_to_vk(payload, url_for_upload, pic_to_upload):
+    with open(pic_to_upload, 'rb') as file:
+        url = url_for_upload
+        files = {
+            'photo': file,
+        }
 
-            response = requests.post(url, params=payload, files=files)
-            response.raise_for_status()
+        response = requests.post(url, params=payload, files=files)
+        response.raise_for_status()
 
-            return response.json()
+        return response.json()
 
+
+def sending_requests_to_vk(method, payload):
     target_url = f'https://api.vk.com/method/{method}'
 
     response = requests.post(target_url, params=payload)
@@ -88,7 +89,7 @@ if __name__ == '__main__':
         'group_id': group_id
         }
 
-    upload_url = fetch_upload_vk(
+    upload_url = sending_requests_to_vk(
         method=fetch_vk_upload_url_method,
         payload=payload_for_fetch_upload_url
     )["response"]["upload_url"]
@@ -97,7 +98,7 @@ if __name__ == '__main__':
         "group_id": group_id
     }
 
-    saved_photo_info = fetch_upload_vk(
+    saved_photo_info = upload_file_to_vk(
         payload=payload_for_upload_photo,
         url_for_upload=upload_url,
         pic_to_upload=processed_file
@@ -112,7 +113,7 @@ if __name__ == '__main__':
         'hash': saved_photo_info["hash"]
     }
 
-    photo = fetch_upload_vk(
+    photo = sending_requests_to_vk(
         method=save_photo_to_album_method,
         payload=payload_for_save_photo_to_album
     )["response"][0]
@@ -126,7 +127,7 @@ if __name__ == '__main__':
         'attachments': f'photo{photo["owner_id"]}_{photo["id"]}'
     }
 
-    fetch_upload_vk(
+    sending_requests_to_vk(
         method=post_vk_wall_method,
         payload=payload_for_post_vk_wall
     )

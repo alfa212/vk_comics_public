@@ -20,7 +20,7 @@ def get_random_comic_number():
     return comic_number_to_publish
 
 
-def fetch_comic_pic_title_ext(comic_number_to_publish, precessed_file_name):
+def fetch_comic_pic_title(comic_number_to_publish, precessed_file_name):
     processed_comic = f'https://xkcd.com/{comic_number_to_publish}/info.0.json'
 
     response = requests.get(processed_comic)
@@ -33,12 +33,10 @@ def fetch_comic_pic_title_ext(comic_number_to_publish, precessed_file_name):
     response = requests.get(processed_comic_link)
     response.raise_for_status()
 
-    pic_ext = os.path.splitext(processed_comic_link)[1]
-
-    with open(f'{precessed_file_name}{pic_ext}', 'wb') as file:
+    with open(precessed_file_name, 'wb') as file:
         file.write(response.content)
 
-    return title, pic_ext
+    return title
 
 
 def upload_file_to_vk(payload, url_for_upload, pic_to_upload):
@@ -68,7 +66,7 @@ if __name__ == '__main__':
 
     published_comics = "published_comics.json"
 
-    processed_file_name = 'precessed_comic_pic'
+    processed_file_name = 'precessed_comic_pic.png'
 
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     group_id = os.getenv('VK_GROUP_ID')
@@ -77,59 +75,57 @@ if __name__ == '__main__':
     save_photo_to_album_method = 'photos.saveWallPhoto'
     post_vk_wall_method = 'wall.post'
 
-    comic_random_number = get_random_comic_number()
-    comic_info = fetch_comic_pic_title_ext(comic_random_number, processed_file_name)
-    comic_title = comic_info[0]
-    comic_pic_ext = comic_info[1]
-    processed_file = f'{processed_file_name}{comic_pic_ext}'
+    try:
+        comic_random_number = get_random_comic_number()
+        comic_title = fetch_comic_pic_title(comic_random_number, processed_file_name)
 
-    payload_for_fetch_upload_url = {
-        'access_token': vk_access_token,
-        'v': '5.131',
-        'group_id': group_id
+        payload_for_fetch_upload_url = {
+            'access_token': vk_access_token,
+            'v': '5.131',
+            'group_id': group_id
+            }
+
+        upload_url = sending_requests_to_vk(
+            method=fetch_vk_upload_url_method,
+            payload=payload_for_fetch_upload_url
+        )["response"]["upload_url"]
+
+        payload_for_upload_photo = {
+            "group_id": group_id
         }
 
-    upload_url = sending_requests_to_vk(
-        method=fetch_vk_upload_url_method,
-        payload=payload_for_fetch_upload_url
-    )["response"]["upload_url"]
+        saved_photo_info = upload_file_to_vk(
+            payload=payload_for_upload_photo,
+            url_for_upload=upload_url,
+            pic_to_upload=processed_file_name
+        )
 
-    payload_for_upload_photo = {
-        "group_id": group_id
-    }
+        payload_for_save_photo_to_album = {
+            'access_token': vk_access_token,
+            'v': '5.131',
+            'group_id': group_id,
+            'photo': saved_photo_info["photo"],
+            'server': int(saved_photo_info["server"]),
+            'hash': saved_photo_info["hash"]
+        }
 
-    saved_photo_info = upload_file_to_vk(
-        payload=payload_for_upload_photo,
-        url_for_upload=upload_url,
-        pic_to_upload=processed_file
-    )
+        photo = sending_requests_to_vk(
+            method=save_photo_to_album_method,
+            payload=payload_for_save_photo_to_album
+        )["response"][0]
 
-    payload_for_save_photo_to_album = {
-        'access_token': vk_access_token,
-        'v': '5.131',
-        'group_id': group_id,
-        'photo': saved_photo_info["photo"],
-        'server': int(saved_photo_info["server"]),
-        'hash': saved_photo_info["hash"]
-    }
+        payload_for_post_vk_wall = {
+            'access_token': vk_access_token,
+            'v': '5.131',
+            'owner_id': f'-{group_id}',
+            'from_group': 1,
+            'message': comic_title,
+            'attachments': f'photo{photo["owner_id"]}_{photo["id"]}'
+        }
 
-    photo = sending_requests_to_vk(
-        method=save_photo_to_album_method,
-        payload=payload_for_save_photo_to_album
-    )["response"][0]
-
-    payload_for_post_vk_wall = {
-        'access_token': vk_access_token,
-        'v': '5.131',
-        'owner_id': f'-{group_id}',
-        'from_group': 1,
-        'message': comic_title,
-        'attachments': f'photo{photo["owner_id"]}_{photo["id"]}'
-    }
-
-    sending_requests_to_vk(
-        method=post_vk_wall_method,
-        payload=payload_for_post_vk_wall
-    )
-
-    os.remove(processed_file)
+        sending_requests_to_vk(
+            method=post_vk_wall_method,
+            payload=payload_for_post_vk_wall
+        )
+    finally:
+        os.remove(processed_file_name)

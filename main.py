@@ -21,9 +21,7 @@ def get_random_comic_number():
 
 
 def fetch_comic_pic_title_ext(comic_number_to_publish, precessed_file_name):
-    page_url_template = "https://xkcd.com/page_number/info.0.json"
-
-    processed_comic = page_url_template.replace("page_number", str(comic_number_to_publish))
+    processed_comic = f'https://xkcd.com/{comic_number_to_publish}/info.0.json'
 
     response = requests.get(processed_comic)
     response.raise_for_status()

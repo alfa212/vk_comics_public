@@ -20,13 +20,13 @@ pip install -r requirements.txt
 Ключ доступа пользователя (токен) для публикации материалов в ВК. Можно получить здесь: https://dev.vk.com/api/access-token/implicit-flow-user
 
 ```
-VK_ACCESS_TOKEN = 'Ваш токен'
+VK_ACCESS_TOKEN='Ваш_токен'
 ```
 
 ID группы в ВК, куда будут публиковаться комиксы (узнать ID вашей группы можно здесь: https://regvk.com/id):
 
 ```
-VK_GROUP_ID = 'ID вашей группы'
+VK_GROUP_ID='ID_вашей_группы'
 ```
 
 ## Запуск скрипта

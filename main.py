@@ -44,8 +44,9 @@ class VKError(Exception):
 
 
 def find_vk_errors(vk_answer):
-    raise VKError(f'VK Error code: {vk_answer["error"]["error_code"]}',
-                  f'VK Error message: {vk_answer["error"]["error_msg"]}')
+    if "error" in vk_answer:
+        raise VKError(f'VK Error code: {vk_answer["error"]["error_code"]}',
+                      f'VK Error message: {vk_answer["error"]["error_msg"]}')
 
 
 def upload_file_to_vk(vk_group, url_for_upload, pic_to_upload):
@@ -63,8 +64,7 @@ def upload_file_to_vk(vk_group, url_for_upload, pic_to_upload):
 
         vk_answer = response.json()
 
-        if "error" in vk_answer:
-            find_vk_errors(vk_answer)
+        find_vk_errors(vk_answer)
 
         return vk_answer
 
@@ -81,8 +81,7 @@ def sending_requests_to_vk(api_token, api_version, vk_group, method, payload={})
 
     vk_answer = response.json()
 
-    if "error" in vk_answer:
-        find_vk_errors(vk_answer)
+    find_vk_errors(vk_answer)
 
     return vk_answer
 

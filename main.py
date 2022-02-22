@@ -39,6 +39,17 @@ def fetch_comic_pic_title(comic_number_to_publish, precessed_file_name):
     return title
 
 
+class VKError(Exception):
+    def __init__(self, num, text):
+        self.n = num
+        self.txt = text
+
+
+def find_vk_errors(vk_answer):
+    raise VKError(f'VK Error code: {vk_answer["error"]["error_code"]}',
+                  f'VK Error message: {vk_answer["error"]["error_msg"]}')
+
+
 def upload_file_to_vk(payload, url_for_upload, pic_to_upload):
     with open(pic_to_upload, 'rb') as file:
         url = url_for_upload
@@ -49,7 +60,12 @@ def upload_file_to_vk(payload, url_for_upload, pic_to_upload):
         response = requests.post(url, params=payload, files=files)
         response.raise_for_status()
 
-        return response.json()
+        vk_answer = response.json()
+
+        if "error" in vk_answer:
+            find_vk_errors(vk_answer)
+
+        return vk_answer
 
 
 def sending_requests_to_vk(method, payload):
@@ -58,19 +74,10 @@ def sending_requests_to_vk(method, payload):
     response = requests.post(target_url, params=payload)
     response.raise_for_status()
 
-    return response.json()
+    vk_answer = response.json()
 
-
-def find_vk_errors(vk_answer):
     if "error" in vk_answer:
-        class VKError(Exception):
-            def __init__(self, num, text):
-                self.n = num
-                self.txt = text
-
-        raise VKError(f'VK Error code: {vk_answer["error"]["error_code"]}',
-                      f'VK Error message: {vk_answer["error"]["error_msg"]}'
-                      )
+        find_vk_errors(vk_answer)
 
     return vk_answer
 
@@ -99,20 +106,20 @@ if __name__ == '__main__':
             'group_id': group_id
             }
 
-        upload_url = find_vk_errors(sending_requests_to_vk(
+        upload_url = sending_requests_to_vk(
             method=fetch_vk_upload_url_method,
             payload=payload_for_fetch_upload_url
-        ))["response"]["upload_url"]
+        )["response"]["upload_url"]
 
         payload_for_upload_photo = {
             "group_id": group_id
         }
 
-        saved_photo_info = find_vk_errors(upload_file_to_vk(
+        saved_photo_info = upload_file_to_vk(
             payload=payload_for_upload_photo,
             url_for_upload=upload_url,
             pic_to_upload=processed_file_name
-        ))
+        )
 
         payload_for_save_photo_to_album = {
             'access_token': vk_access_token,
@@ -123,10 +130,10 @@ if __name__ == '__main__':
             'hash': saved_photo_info["hash"]
         }
 
-        photo = find_vk_errors(sending_requests_to_vk(
+        photo = sending_requests_to_vk(
             method=save_photo_to_album_method,
             payload=payload_for_save_photo_to_album
-        ))["response"][0]
+        )["response"][0]
 
         payload_for_post_vk_wall = {
             'access_token': vk_access_token,
@@ -137,9 +144,9 @@ if __name__ == '__main__':
             'attachments': f'photo{photo["owner_id"]}_{photo["id"]}'
         }
 
-        find_vk_errors(sending_requests_to_vk(
+        sending_requests_to_vk(
             method=post_vk_wall_method,
             payload=payload_for_post_vk_wall
-        ))
+        )
     finally:
         os.remove(processed_file_name)

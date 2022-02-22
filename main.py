@@ -90,7 +90,7 @@ def sending_requests_to_vk(api_token, api_version, vk_group, method, payload={})
 if __name__ == '__main__':
     load_dotenv()
 
-    processed_file_name = 'precessed_comic_pic.png'
+    comics_name = 'precessed_comic_pic.png'
 
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     group_id = os.getenv('VK_GROUP_ID')
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     try:
         comic_random_number = get_random_comic_number()
-        comic_title = fetch_comic_pic_title(comic_random_number, processed_file_name)
+        comic_title = fetch_comic_pic_title(comic_random_number, comics_name)
 
         upload_url = sending_requests_to_vk(
             vk_access_token,
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         saved_photo_info = upload_file_to_vk(
             group_id,
             url_for_upload=upload_url,
-            pic_to_upload=processed_file_name
+            pic_to_upload=comics_name
         )
 
         payload_for_save_photo_to_album = {
@@ -146,4 +146,4 @@ if __name__ == '__main__':
             payload=payload_for_post_vk_wall
         )
     finally:
-        os.remove(processed_file_name)
+        os.remove(comics_name)

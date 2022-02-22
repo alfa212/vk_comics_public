@@ -18,17 +18,17 @@ def get_random_comic_number():
     return comic_number
 
 
-def fetch_comic_pic_title(comic_number_to_publish, precessed_file_name):
-    processed_comic = f'https://xkcd.com/{comic_number_to_publish}/info.0.json'
+def fetch_comic_pic_title(comic_number, precessed_file_name):
+    processed_comic = f'https://xkcd.com/{comic_number}/info.0.json'
 
     response = requests.get(processed_comic)
     response.raise_for_status()
 
     comic_img_title = response.json()
-    processed_comic_link = comic_img_title["img"]
+    comics_link = comic_img_title["img"]
     title = comic_img_title["alt"]
 
-    response = requests.get(processed_comic_link)
+    response = requests.get(comics_link)
     response.raise_for_status()
 
     with open(precessed_file_name, 'wb') as file:

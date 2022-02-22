@@ -69,7 +69,7 @@ def upload_file_to_vk(vk_group, url_for_upload, pic_to_upload):
         return vk_answer
 
 
-def sending_requests_to_vk(api_token, api_version, vk_group, method, payload={}):
+def send_requests_to_vk(api_token, api_version, vk_group, method, payload={}):
     target_url = f'https://api.vk.com/method/{method}'
 
     payload['access_token'] = api_token,
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         comic_random_number = get_random_comic_number()
         comic_title = fetch_comic_pic_title(comic_random_number, comics_name)
 
-        upload_url = sending_requests_to_vk(
+        upload_url = send_requests_to_vk(
             vk_access_token,
             vk_api_version,
             group_id,
@@ -122,7 +122,7 @@ if __name__ == '__main__':
             'hash': saved_photo_info["hash"]
         }
 
-        photo = sending_requests_to_vk(
+        photo = send_requests_to_vk(
             vk_access_token,
             vk_api_version,
             group_id,
@@ -137,7 +137,7 @@ if __name__ == '__main__':
             'attachments': f'photo{photo["owner_id"]}_{photo["id"]}'
         }
 
-        sending_requests_to_vk(
+        send_requests_to_vk(
             vk_access_token,
             vk_api_version,
             group_id,

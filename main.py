@@ -1,4 +1,3 @@
-import json
 import random
 import os.path
 
@@ -13,9 +12,8 @@ def get_random_comic_number():
     response.raise_for_status()
 
     last_comic_num = response.json()["num"]
-    all_comics_nums = [comic_num for comic_num in range(1, last_comic_num)]
 
-    comic_number_to_publish = random.choice(all_comics_nums)
+    comic_number_to_publish = random.randrange(1, last_comic_num)
 
     return comic_number_to_publish
 

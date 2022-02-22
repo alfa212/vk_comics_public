@@ -48,11 +48,14 @@ def find_vk_errors(vk_answer):
                   f'VK Error message: {vk_answer["error"]["error_msg"]}')
 
 
-def upload_file_to_vk(payload, url_for_upload, pic_to_upload):
+def upload_file_to_vk(vk_group, url_for_upload, pic_to_upload):
     with open(pic_to_upload, 'rb') as file:
         url = url_for_upload
         files = {
             'photo': file,
+        }
+        payload = {
+            "group_id": vk_group
         }
 
         response = requests.post(url, params=payload, files=files)
@@ -66,8 +69,12 @@ def upload_file_to_vk(payload, url_for_upload, pic_to_upload):
         return vk_answer
 
 
-def sending_requests_to_vk(method, payload):
+def sending_requests_to_vk(api_token, api_version, vk_group, method, payload={}):
     target_url = f'https://api.vk.com/method/{method}'
+
+    payload['access_token'] = api_token,
+    payload['v'] = api_version,
+    payload['group_id'] = vk_group
 
     response = requests.post(target_url, params=payload)
     response.raise_for_status()
@@ -89,6 +96,7 @@ if __name__ == '__main__':
 
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     group_id = os.getenv('VK_GROUP_ID')
+    vk_api_version = '5.131'
 
     fetch_vk_upload_url_method = 'photos.getWallUploadServer'
     save_photo_to_album_method = 'photos.saveWallPhoto'
@@ -98,44 +106,34 @@ if __name__ == '__main__':
         comic_random_number = get_random_comic_number()
         comic_title = fetch_comic_pic_title(comic_random_number, processed_file_name)
 
-        payload_for_fetch_upload_url = {
-            'access_token': vk_access_token,
-            'v': '5.131',
-            'group_id': group_id
-            }
-
         upload_url = sending_requests_to_vk(
-            method=fetch_vk_upload_url_method,
-            payload=payload_for_fetch_upload_url
+            vk_access_token,
+            vk_api_version,
+            group_id,
+            fetch_vk_upload_url_method
         )["response"]["upload_url"]
 
-        payload_for_upload_photo = {
-            "group_id": group_id
-        }
-
         saved_photo_info = upload_file_to_vk(
-            payload=payload_for_upload_photo,
+            group_id,
             url_for_upload=upload_url,
             pic_to_upload=processed_file_name
         )
 
         payload_for_save_photo_to_album = {
-            'access_token': vk_access_token,
-            'v': '5.131',
-            'group_id': group_id,
             'photo': saved_photo_info["photo"],
             'server': int(saved_photo_info["server"]),
             'hash': saved_photo_info["hash"]
         }
 
         photo = sending_requests_to_vk(
+            vk_access_token,
+            vk_api_version,
+            group_id,
             method=save_photo_to_album_method,
             payload=payload_for_save_photo_to_album
         )["response"][0]
 
         payload_for_post_vk_wall = {
-            'access_token': vk_access_token,
-            'v': '5.131',
             'owner_id': f'-{group_id}',
             'from_group': 1,
             'message': comic_title,
@@ -143,6 +141,9 @@ if __name__ == '__main__':
         }
 
         sending_requests_to_vk(
+            vk_access_token,
+            vk_api_version,
+            group_id,
             method=post_vk_wall_method,
             payload=payload_for_post_vk_wall
         )

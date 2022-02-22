@@ -13,9 +13,9 @@ def get_random_comic_number():
 
     last_comic_num = response.json()["num"]
 
-    comic_number_to_publish = random.randrange(1, last_comic_num)
+    comic_number = random.randrange(1, last_comic_num)
 
-    return comic_number_to_publish
+    return comic_number
 
 
 def fetch_comic_pic_title(comic_number_to_publish, precessed_file_name):
@@ -89,8 +89,6 @@ def sending_requests_to_vk(api_token, api_version, vk_group, method, payload={})
 
 if __name__ == '__main__':
     load_dotenv()
-
-    published_comics = "published_comics.json"
 
     processed_file_name = 'precessed_comic_pic.png'
 
